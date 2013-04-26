@@ -194,6 +194,29 @@ public class ToHtmlSerializer implements Visitor {
         } else printLink(linkRenderer.render(node, refNode.getUrl(), refNode.getTitle(), text));
     }
 
+    public void visit(CiteRefLinkNode node) {
+        String text = printChildrenToString(node);
+        String key = node.referenceKey != null ? printChildrenToString(node.referenceKey) : text;
+        ReferenceNode refNode = references.get(normalize(key));
+
+        printer.println().print("<blockquote");
+        if(refNode.getUrl().startsWith("urn:cts:")) {
+            printAttribute("class", "cts-text");
+        }
+        else if(refNode.getUrl().startsWith("urn:cite:")) {
+            printAttribute("class", "cite-collection");
+        }
+        printAttribute("cite", refNode.getUrl());
+        if (!StringUtils.isEmpty(refNode.getTitle())) {
+            printAttribute("title", refNode.getTitle());
+        }
+        printer.print(">");
+
+        printer.print(text);
+
+        printer.print("</blockquote>");
+    }
+
     public void visit(SimpleNode node) {
         switch (node.getType()) {
             case Apostrophe:

@@ -23,6 +23,7 @@ public interface Visitor {
     void visit(AutoLinkNode node);
     void visit(BlockQuoteNode node);
     void visit(BulletListNode node);
+    void visit(CiteRefLinkNode node);
     void visit(CodeNode node);
     void visit(DefinitionListNode node);
     void visit(DefinitionNode node);

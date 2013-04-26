@@ -44,6 +44,7 @@ import static org.parboiled.common.StringUtils.repeat;
  * Parboiled parser for the standard and extended markdown syntax.
  * Builds an Abstract Syntax Tree (AST) of {@link Node} objects.
  */
+@BuildParseTree
 @SuppressWarnings( {"InfiniteRecursion"})
 public class Parser extends BaseParser<Object> implements Extensions {
     
@@ -687,6 +688,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return NodeSequence(
                 FirstOf(new ArrayBuilder<Rule>()
                         .addNonNulls(ext(WIKILINKS) ? new Rule[]{WikiLink()} : null)
+                        .addNonNulls(ext(CITE) ? Sequence('!', CiteLabel(), CiteReferenceLink(true)) : null)
+                        .addNonNulls(ext(CITE) ? Sequence(CiteLabel(), CiteReferenceLink(false)) : null)
                         .add(Sequence(Label(), FirstOf(ExplicitLink(false), ReferenceLink(false))))
                         .add(AutoLink())
                         .get()
@@ -806,6 +809,35 @@ public class Parser extends BaseParser<Object> implements Extensions {
                         ) :
                         TestNot('>'),
                 ANY
+        );
+    }
+
+    //************* CITE REFERENCE ***********
+
+    public Rule CiteLabel() {
+        return Sequence(
+                '{',
+                push(new SuperNode()),
+                OneOrMore(TestNot('}'), NonAutoLinkInline(), addAsChild()),
+                '}'
+        );
+    }
+
+    public Rule CiteReferenceLink(boolean inline) {
+        return Sequence(
+                FirstOf(
+                        Sequence(
+                                Spn1(), push(match()),
+                                FirstOf(
+                                        Label(), // regular reference link
+                                        Sequence("[]", push(null)) // implicit reference link
+                                )
+                        ),
+                        Sequence(push(null), push(null)) // implicit referencelink without trailing []
+                ),
+                push(
+                  new CiteRefLinkNode((SuperNode)popAsNode(), popAsString(), popAsNode(), inline)
+                )
         );
     }
 
@@ -1006,7 +1038,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         if (ext(SMARTS)) {
             chars += ".-";
         }
-        if (ext(AUTOLINKS)) {
+        if (ext(CITE) || ext(AUTOLINKS)) {
             chars += "(){}";
         }
         if (ext(DEFINITIONS)) {

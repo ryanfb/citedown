@@ -688,8 +688,8 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return NodeSequence(
                 FirstOf(new ArrayBuilder<Rule>()
                         .addNonNulls(ext(WIKILINKS) ? new Rule[]{WikiLink()} : null)
-                        .addNonNulls(ext(CITE) ? Sequence('!', CiteLabel(), CiteReferenceLink(true)) : null)
-                        .addNonNulls(ext(CITE) ? Sequence(CiteLabel(), CiteReferenceLink(false)) : null)
+                        .addNonNulls(ext(CITE) ? new Rule[]{Sequence('!', CiteLabel(), CiteReferenceLink(true))} : null)
+                        .addNonNulls(ext(CITE) ? new Rule[]{Sequence(CiteLabel(), CiteReferenceLink(false))} : null)
                         .add(Sequence(Label(), FirstOf(ExplicitLink(false), ReferenceLink(false))))
                         .add(AutoLink())
                         .get()

@@ -9,7 +9,8 @@ class CiteSpec extends AbstractPegDownSpec {
       		implicit val processor = new PegDownProcessor(CITE)
 
       		test("CiteMarkdown/References")
-      		// test("CiteMarkdown/Inline_References")
+      		test("CiteMarkdown/Inline_References")
+      		test("CiteMarkdown/AthPol")
   		}
   	}
 }

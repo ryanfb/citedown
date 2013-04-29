@@ -199,14 +199,24 @@ public class ToHtmlSerializer implements Visitor {
         String key = node.referenceKey != null ? printChildrenToString(node.referenceKey) : text;
         ReferenceNode refNode = references.get(normalize(key));
 
-        printer.println().print("<blockquote");
+        if(node.inline) {
+            printer.println().print("<blockquote");
+        } else {
+            printer.println().print("<a");
+        }
+
         if(refNode.getUrl().startsWith("urn:cts:")) {
             printAttribute("class", "cts-text");
-        }
-        else if(refNode.getUrl().startsWith("urn:cite:")) {
+        } else if(refNode.getUrl().startsWith("urn:cite:")) {
             printAttribute("class", "cite-collection");
         }
-        printAttribute("cite", refNode.getUrl());
+        
+        if(node.inline) {
+            printAttribute("cite", refNode.getUrl());
+        } else {
+            printAttribute("href", refNode.getUrl());
+        }
+
         if (!StringUtils.isEmpty(refNode.getTitle())) {
             printAttribute("title", refNode.getTitle());
         }
@@ -214,7 +224,11 @@ public class ToHtmlSerializer implements Visitor {
 
         printer.print(text);
 
-        printer.print("</blockquote>");
+        if(node.inline) {
+            printer.print("</blockquote>");
+        } else {
+            printer.print("</a>");
+        }
     }
 
     public void visit(SimpleNode node) {

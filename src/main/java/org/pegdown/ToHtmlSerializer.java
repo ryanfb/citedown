@@ -208,7 +208,12 @@ public class ToHtmlSerializer implements Visitor {
         if(refNode.getUrl().startsWith("urn:cts:")) {
             printAttribute("class", "cts-text");
         } else if(refNode.getUrl().startsWith("urn:cite:")) {
-            printAttribute("class", "cite-collection");
+            if(node.image) {
+                printAttribute("class", "cite-img");
+            }
+            else {
+                printAttribute("class", "cite-collection");
+            }
         }
         
         if(node.inline) {

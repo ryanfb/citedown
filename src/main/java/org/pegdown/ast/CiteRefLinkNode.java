@@ -22,12 +22,18 @@ public class CiteRefLinkNode extends SuperNode {
     public final String separatorSpace;
     public final SuperNode referenceKey;
     public final boolean inline;
+    public final boolean image;
 
-    public CiteRefLinkNode(SuperNode referenceKey, String separatorSpace, Node child, boolean inline) {
+    public CiteRefLinkNode(SuperNode referenceKey, String separatorSpace, Node child, boolean inline, boolean image) {
         super(child);
         this.separatorSpace = separatorSpace;
         this.referenceKey = referenceKey;
         this.inline = inline;
+        this.image = image;
+    }
+
+    public CiteRefLinkNode(SuperNode referenceKey, String separatorSpace, Node child, boolean inline) {
+        this(referenceKey, separatorSpace, child, inline, false);
     }
 
     @Override

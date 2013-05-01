@@ -688,6 +688,7 @@ public class Parser extends BaseParser<Object> implements Extensions {
         return NodeSequence(
                 FirstOf(new ArrayBuilder<Rule>()
                         .addNonNulls(ext(WIKILINKS) ? new Rule[]{WikiLink()} : null)
+                        .addNonNulls(ext(CITE) ? new Rule[]{Sequence(CiteLabel(), CiteImageLink(false))} : null)
                         .addNonNulls(ext(CITE) ? new Rule[]{Sequence('!', CiteLabel(), CiteReferenceLink(true))} : null)
                         .addNonNulls(ext(CITE) ? new Rule[]{Sequence(CiteLabel(), CiteReferenceLink(false))} : null)
                         .add(Sequence(Label(), FirstOf(ExplicitLink(false), ReferenceLink(false))))
@@ -837,6 +838,21 @@ public class Parser extends BaseParser<Object> implements Extensions {
                 ),
                 push(
                   new CiteRefLinkNode((SuperNode)popAsNode(), popAsString(), popAsNode(), inline)
+                )
+        );
+    }
+
+    public Rule CiteImageLink(boolean inline) {
+        return Sequence(
+                Sequence(
+                        Spn1(), push(match()),
+                        FirstOf(
+                                CiteLabel(), // CITE image reference link
+                                Sequence("{}", push(null)) // implicit reference link
+                        )
+                ),
+                push(
+                  new CiteRefLinkNode((SuperNode)popAsNode(), popAsString(), popAsNode(), inline, true)
                 )
         );
     }

@@ -199,40 +199,52 @@ public class ToHtmlSerializer implements Visitor {
         String key = node.referenceKey != null ? printChildrenToString(node.referenceKey) : text;
         ReferenceNode refNode = references.get(normalize(key));
 
-        if(node.inline) {
-            printer.println().print("<blockquote");
-        } else {
-            printer.println().print("<a");
-        }
-
-        if(refNode.getUrl().startsWith("urn:cts:")) {
-            printAttribute("class", "cts-text");
-        } else if(refNode.getUrl().startsWith("urn:cite:")) {
-            if(node.image) {
-                printAttribute("class", "cite-img");
+        if(node.image && node.inline) {
+            printer.println().print("<img");
+            printAttribute("class", "cite-img");
+            printAttribute("src", refNode.getUrl());
+            printAttribute("alt", text);
+            if (!StringUtils.isEmpty(refNode.getTitle())) {
+                printAttribute("title", refNode.getTitle());
             }
-            else {
-                printAttribute("class", "cite-collection");
+            printer.print("/>");
+        }
+        else {
+            if(node.inline) {
+                printer.println().print("<blockquote");
+            } else {
+                printer.println().print("<a");
             }
-        }
-        
-        if(node.inline) {
-            printAttribute("cite", refNode.getUrl());
-        } else {
-            printAttribute("href", refNode.getUrl());
-        }
 
-        if (!StringUtils.isEmpty(refNode.getTitle())) {
-            printAttribute("title", refNode.getTitle());
-        }
-        printer.print(">");
+            if(refNode.getUrl().startsWith("urn:cts:")) {
+                printAttribute("class", "cts-text");
+            } else if(refNode.getUrl().startsWith("urn:cite:")) {
+                if(node.image) {
+                    printAttribute("class", "cite-img");
+                }
+                else {
+                    printAttribute("class", "cite-collection");
+                }
+            }
+            
+            if(node.inline) {
+                printAttribute("cite", refNode.getUrl());
+            } else {
+                printAttribute("href", refNode.getUrl());
+            }
 
-        printer.print(text);
+            if (!StringUtils.isEmpty(refNode.getTitle())) {
+                printAttribute("title", refNode.getTitle());
+            }
+            printer.print(">");
 
-        if(node.inline) {
-            printer.print("</blockquote>");
-        } else {
-            printer.print("</a>");
+            printer.print(text);
+
+            if(node.inline) {
+                printer.print("</blockquote>");
+            } else {
+                printer.print("</a>");
+            }
         }
     }
 

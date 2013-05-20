@@ -56,15 +56,13 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
 
-useGpg := true
-
-pgpSigningKey := Some(-2321133875171851978L)
-
 publishTo <<= version { v: String =>
-  val nexus = "https://oss.sonatype.org/"
+  val nexus = "http://beta.hpcc.uh.edu/nexus/"
   if (v.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "content/repositories/snapshots")
-  else                             Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  else                             Some("releases" at nexus + "content/repositories/releases")
 }
+
+credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
 pomExtra :=
   <scm>

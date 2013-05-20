@@ -2,13 +2,13 @@ import AssemblyKeys._ // put this at the top of the file
 
 assemblySettings
 
-name := "pegdown"
+name := "citedown"
 
 version := "1.2.1"
 
 homepage := Some(new URL("http://pegdown.org"))
 
-organization := "org.pegdown"
+organization := "edu.harvard.chs.citedown"
 
 organizationHomepage := Some(new URL("http://pegdown.org"))
 
@@ -68,8 +68,8 @@ publishTo <<= version { v: String =>
 
 pomExtra :=
   <scm>
-    <url>git@github.com:sirthias/pegdown.git</url>
-    <connection>scm:git:git@github.com:sirthias/pegdown.git</connection>
+    <url>git@github.com:ryanfb/pegdown.git</url>
+    <connection>scm:git:git@github.com:ryanfb/pegdown.git</connection>
   </scm>
   <developers>
     <developer>

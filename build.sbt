@@ -4,7 +4,7 @@ assemblySettings
 
 name := "citedown"
 
-version := "1.2.1"
+version := "1.2.1.0"
 
 homepage := Some(new URL("http://pegdown.org"))
 

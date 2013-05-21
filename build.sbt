@@ -8,7 +8,7 @@ version := "1.2.1.0"
 
 homepage := Some(new URL("http://pegdown.org"))
 
-organization := "edu.harvard.chs.citedown"
+organization := "edu.harvard.chs"
 
 organizationHomepage := Some(new URL("http://pegdown.org"))
 

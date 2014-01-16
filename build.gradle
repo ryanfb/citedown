@@ -1,0 +1,19 @@
+apply plugin: "java"
+
+apply from: "versions.gradle"
+
+repositories {
+    mavenCentral()
+    // for mdweb library
+    maven {
+        url "http://beta.hpcc.uh.edu/nexus/content/repositories/releases"
+    }
+    // for pegdown library
+    maven {
+        url "https://repository.jboss.org/nexus/content/repositories/scala-tools-releases"
+    }
+}
+dependencies {
+    //classpath  group: 'edu.holycross.shot', name : 'mdweb' , version: mdversion
+    compile group: 'org.pegdown', name : 'pegdown', version: pegdownVersion
+}

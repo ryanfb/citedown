@@ -1,4 +1,4 @@
-apply plugin: "java"
+apply plugin: "groovy"
 
 apply from: "versions.gradle"
 
@@ -14,6 +14,9 @@ repositories {
     }
 }
 dependencies {
-    //classpath  group: 'edu.holycross.shot', name : 'mdweb' , version: mdversion
-    compile group: 'org.pegdown', name : 'pegdown', version: pegdownVersion
+  compile group: 'org.pegdown', name : 'pegdown', version: pegdownVersion
+  compile group: 'org.codehaus.groovy', name: 'groovy-all', version: groovyVersion
+
+  testCompile group: 'junit', name: 'junit', version: junitversion
+  testCompile group :'xmlunit', name: 'xmlunit', version: xmlunitversion
 }

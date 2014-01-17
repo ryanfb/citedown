@@ -16,9 +16,15 @@ class TestTreePrint {
   @Test void testConstructor() {
     PegDownProcessor pdp = new PegDownProcessor(Extensions.CITE)
     RootNode root = pdp.parser.parse(markdownText.toCharArray())
-    System.err.println "Root is a " + root.getClass()
-    //    TreeUtil tu = new TreeUtil(root)
-    ///    System.err.println tu.printTree()
+    TreeUtil tu = new TreeUtil(root)
+    String printed = tu.printSimpleTree()
+
+    Integer expectedSize = 4
+    def lines =  printed.readLines()
+    assert lines.size() == expectedSize
+    
+    String expectedStart = "\t1. HeaderNode"
+    assert lines[0] == expectedStart
   }
   
 }

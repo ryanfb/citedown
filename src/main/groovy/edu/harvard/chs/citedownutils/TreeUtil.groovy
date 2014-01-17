@@ -37,9 +37,12 @@ class TreeUtil {
   }
   
 
-  /** Prints ASCII-formatted tree layout to standard out. */
-  void printTree() {
-    printTree(root,0)
+  /** Prints ASCII-formatted tree layout to a String.
+   * @returns A pretty-printed representation of the parse tree
+   * stripped down to class names and text of TextNodes.
+   */
+  String printSimpleTree() {
+    return printSimpleTree(root,new StringBuffer(), 0)
   }
 
 
@@ -48,22 +51,24 @@ class TreeUtil {
   /** Prints ASCII-formatted tree layout to standard out. 
    * @param n Node to descend from.
    * @param indents Indentation level of current node.
+   * @returns A pretty-printed representation of the parse tree
+   * stripped down to class names and text of TextNodes.
    */
-  void printTree(Object n, Integer indents) {
-    indents++;
+  String printSimpleTree(Object n, StringBuffer buffer, Integer indents) {
     n.getChildren().each { c ->
       for (i in 0..indents) {
-	print "\t"
+	buffer.append("\t")
       }
-      print "${indents}. "
+      indents++;
+      buffer.append( "${indents}. ")
       String txt =  c.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
       if (c instanceof edu.harvard.chs.citedown.ast.TextNode) {
 	txt = ': "' + c.getText() + '"'
       }
-      println txt
-      descendTree(c, indents)
+      buffer.append("${txt}\n")
+      printSimpleTree(c, buffer, indents)
     }
-  
+    return buffer.toString()
   }
 
 }

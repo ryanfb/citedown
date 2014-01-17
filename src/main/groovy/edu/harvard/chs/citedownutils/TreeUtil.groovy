@@ -1,4 +1,4 @@
-package edu.harvard.chs.citedownutil
+package edu.harvard.chs.citedownutils
 
 import edu.harvard.chs.citedown.ast.RootNode
 
@@ -26,10 +26,44 @@ import static org.parboiled.common.StringUtils.repeat;
  */
 class TreeUtil {
 
+  /** Root node of pegdown parsing result. */
   RootNode root
   
 
+
+  /** Constructor requiring root node. */
   TreeUtil(RootNode rootNode) {
     this.root = rootNode
   }
+  
+
+  /** Prints ASCII-formatted tree layout to standard out. */
+  void printTree() {
+    printTree(root,0)
+  }
+
+
+
+
+  /** Prints ASCII-formatted tree layout to standard out. 
+   * @param n Node to descend from.
+   * @param indents Indentation level of current node.
+   */
+  void printTree(Object n, Integer indents) {
+    indents++;
+    n.getChildren().each { c ->
+      for (i in 0..indents) {
+	print "\t"
+      }
+      print "${indents}. "
+      String txt =  c.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
+      if (c instanceof edu.harvard.chs.citedown.ast.TextNode) {
+	txt = ': "' + c.getText() + '"'
+      }
+      println txt
+      descendTree(c, indents)
+    }
+  
+  }
+
 }

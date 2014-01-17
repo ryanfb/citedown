@@ -28,8 +28,6 @@ class TreeUtil {
 
   /** Root node of pegdown parsing result. */
   RootNode root
-  
-
 
   /** Constructor requiring root node. */
   TreeUtil(RootNode rootNode) {
@@ -69,6 +67,11 @@ class TreeUtil {
       printSimpleTree(c, buffer, indents)
     }
     return buffer.toString()
+  }
+
+
+  void showReff() {
+    System.err.println "reff gets you " + this.root.getReferences().getClass()    
   }
 
 }

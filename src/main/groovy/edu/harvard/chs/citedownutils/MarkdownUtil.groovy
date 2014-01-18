@@ -78,7 +78,7 @@ class MarkdownUtil {
             if (imgCollections.contains(collectionUrn) ) {
                 reply = "${img}?request=GetImagePlus&urn=${urn}"
             } else {
-                reply = "${coll}urn=${urn}"
+                reply = "${coll}?request=GetObjectPlus&urn=${urn}"
             }
         } catch (Exception obje) {
         }

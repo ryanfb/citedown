@@ -1,6 +1,9 @@
 ext {
-    pegdownVersion = "1.0.1"
     groovyVersion = "2.1.3"
+
+    pegdownVersion = "1.0.1"
+    citeVersion = "0.14.1"
+
     junitversion = "4.10"	
     xmlunitversion = "1.3"
 }

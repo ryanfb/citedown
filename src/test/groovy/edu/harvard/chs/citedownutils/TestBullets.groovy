@@ -5,7 +5,7 @@ import org.junit.Test
 
 class TestBullets {
 
-  String markdownText = "Text paragraph\n\n- i 1\n- no 2\n- item 3\n\n"
+  String markdownText = "Text paragraph\n\n- item 1\n- no 2\n- item 3\n\n"
 
   @Test void testConstructor() {
     MarkdownUtil mdu = new MarkdownUtil(markdownText)
@@ -13,7 +13,7 @@ class TestBullets {
 
     String converted = mdu.toMarkdown()
     def lines = converted.readLines()
-    assert lines[1] == "-i 1"
+    assert lines[1] == "-item 1"
 
   }
   

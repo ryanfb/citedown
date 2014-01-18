@@ -65,7 +65,7 @@ class MarkdownUtil {
     * @throws Exception if urnStr cannot be parsed as
     * either a CTS URN or a CITE Collection URN.
     */
-    String urlForUrn(String urnStr) 
+    String urlForCitedUrn(String urnStr) 
     throws Exception {
         if (debug > 0) { System.err.println "Test " + urnStr} 
         String reply = null
@@ -80,7 +80,7 @@ class MarkdownUtil {
             CiteUrn urn = new CiteUrn(urnStr)
             String collectionUrn = "urn:cite:${urn.getNs()}:${urn.getCollection()}"
             if (imgCollections.contains(collectionUrn) ) {
-                reply = "${img}urn=${urn}"
+                reply = "${img}?request=GetImagePlus&urn=${urn}"
             } else {
                 reply = "${coll}urn=${urn}"
             }

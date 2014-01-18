@@ -3,7 +3,7 @@ package edu.harvard.chs.citedownutils
 import edu.harvard.chs.citedown.PegDownProcessor
 import edu.harvard.chs.citedown.Extensions
 import edu.harvard.chs.citedown.ast.RootNode
-
+import org.parboiled.support.ParsingResult
 
 import edu.harvard.chs.cite.CiteUrn
 import edu.harvard.chs.cite.CtsUrn
@@ -34,6 +34,10 @@ class MarkdownUtil {
   /** List of collections configured with CITE Image Extension. */
   java.util.ArrayList imgCollections = [] 
 
+  /** Map of reference abbreviations to URNs. */
+  java.util.LinkedHashMap referenceMap = [:]
+
+
   /** Empty constructor */
   MarkdownUtil() {
   }
@@ -52,6 +56,32 @@ class MarkdownUtil {
     this.root = pdp.parser.parse(citedownSource.toCharArray())
   }
 
+
+
+  String extractRef(String s) {
+    def pieces = s.split(/:/)
+    String ref = pieces[0].replaceFirst('\\[','')
+    return ref.replaceFirst('\\]','')
+  }
+
+  void collectReferences() {
+    collectReferences(root)
+  }
+
+
+  void collectReferences(Object n) {
+    String classShort =  n.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
+    if (classShort == "ReferenceNode") {
+      String txt = citedown.substring(n.getStartIndex(), n.getEndIndex())
+      def pair = [n.getUrl(), n.getTitle()]
+      referenceMap[extractRef(txt)] = pair
+      
+    } else {
+      n.getChildren().each { c ->
+	collectReferences(c)
+      }
+    }
+  }
 
 
     /** Resolves a CITE URN value to a URL.  If the URN value

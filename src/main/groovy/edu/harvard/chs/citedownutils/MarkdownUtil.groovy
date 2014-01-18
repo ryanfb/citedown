@@ -18,7 +18,7 @@ CodeNode
 DefinitionListNode	 
 DefinitionNode	 
 DefinitionTermNode	 
-EmphNode	 
+√ EmphNode	 
 ExpImageNode	 
 ExpLinkNode	 
 √ HeaderNode	 
@@ -179,10 +179,8 @@ class MarkdownUtil {
     String shortName = n.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
     System.err.println "Check " + shortName + " in " + blockNodes
     if (blockNodes.contains(shortName)) {
-      System.err.println "Found " + shortName + " so check trail #" + trail + "#"
       if (trail.size() > 0) {
 	txt = "${trail}\n\n"
-	System.err.println "Now txt is " + txt
       }
     }
 
@@ -195,6 +193,11 @@ class MarkdownUtil {
 
     case "edu.harvard.chs.citedown.ast.TextNode":
     txt = n.getText()
+    break
+
+    case "edu.harvard.chs.citedown.ast.EmphNode":
+    txt = "*"
+    trail = "*" + trail 
     break
 
     //case "edu.harvard.chs.citedown.ast.ListItemNode":
@@ -214,6 +217,7 @@ class MarkdownUtil {
 
     case "edu.harvard.chs.citedown.ast.ParaNode":
     break
+
     case "edu.harvard.chs.citedown.ast.HeaderNode":
     //txt = "${citedown.substring(starthere,endhere).replaceAll(/\t/,'')}\n"
     Integer level = n.getLevel()

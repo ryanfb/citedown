@@ -14,8 +14,6 @@ import edu.harvard.chs.cite.CtsUrn
  */
 class MarkdownUtil {
 
-  // remove this
-  def debug
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -67,12 +65,10 @@ class MarkdownUtil {
     */
     String urlForCitedUrn(String urnStr) 
     throws Exception {
-        if (debug > 0) { System.err.println "Test " + urnStr} 
         String reply = null
         try {
             CtsUrn urn = new CtsUrn(urnStr)
-            reply = "${cts}urn=${urn}"
-            if (debug  > 0) { System.err.println "${urn} is a CTS URN."}
+            reply = "${cts}?request=GetPassagePlus&urn=${urn}"
         } catch (Exception ctse) {
         }
 

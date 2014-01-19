@@ -14,8 +14,7 @@ class TestBullets {
 
     String converted = mdu.toMarkdown()
     def lines = converted.readLines()
-    System.err.println "Lines:  " + lines
-    assert lines[1] == "- item 1"
+    assert lines[2] == "- item 1"
   }
 
 
@@ -26,6 +25,7 @@ class TestBullets {
     String converted = mdu.toMarkdown()
     def lines = converted.readLines()
     System.err.println "Lines:  " + lines
-    assert lines[1] == "- *item* 1"
+    assert lines[2] == "- *item* 1"
   }  
+
 }

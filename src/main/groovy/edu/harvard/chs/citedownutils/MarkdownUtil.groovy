@@ -13,7 +13,7 @@ AbstractNode
 AutoLinkNode	 
 BlockQuoteNode	 
 √ BulletListNode	 
-CiteRefLinkNode	 
+√ CiteRefLinkNode	 
 CodeNode	 
 DefinitionListNode	 
 DefinitionNode	 
@@ -29,7 +29,7 @@ MailLinkNode
 √ OrderedListNode	 
 √ ParaNode	 
 QuotedNode	 
-ReferenceNode	 
+√ ReferenceNode	 
 RefImageNode	 
 RefLinkNode	 
 √ RootNode	 
@@ -55,16 +55,17 @@ WikiLinkNode
 class MarkdownUtil {
 
   // tmp var to remove ....
-  def debug
+  def debug 
 
+  /** List of block type nodes that are mutually
+   * exclusive in markdown.
+. */
+  ArrayList blockNodes = ["ParaNode", "HeaderNode", "BulletListNode", "OrderedListNode"]
 
-  //ArrayList terminalNodes = ["TextNode"]
-  //ArrayList inlineNodes = ["EmphNode", "StrongNode"]
-
-  // In markdown, these node types are exclusive.
-  ArrayList blockNodes = ["ParaNode", "HeaderNode", "RootNode", "BulletListNode", "OrderedListNode"]
-
-  
+  /** List of node types that will be mirrored without
+   * recursive processing
+   */
+  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode"]
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -88,11 +89,16 @@ class MarkdownUtil {
   /** Map of reference abbreviations to URNs. */
   java.util.LinkedHashMap referenceMap = [:]
 
-
+  /** Stack of suffixes for inline markdown.*/
   def inlineStack = []
 
+
+  /** Suffix string for current block context. */
   String blockTrail = ""
 
+
+  /** Index of substring for ordered lists within
+   * parsed string. */
   Integer olIdx
 
   /** Empty constructor */
@@ -107,6 +113,11 @@ class MarkdownUtil {
     this.root = pdp.parser.parse(citedownSource.toCharArray())
   }
 
+
+  /** Assigns an parses a String of citedown
+   * content.
+   * @param citedownSource The text source to parse.
+   */
   void setSource(String citedownSource) {
     this.citedown = citedownSource
     PegDownProcessor pdp = new PegDownProcessor(Extensions.CITE)
@@ -114,16 +125,50 @@ class MarkdownUtil {
   }
 
 
+
+  /** Finds the reference identifier given in
+   * square brackets in the text of a ReferenceNode.
+   * @param s The full string of a citedown ReferenceNode.
+   * @returns The reference identifier identified
+   * in square brackets.
+   */
   String extractRef(String s) {
     def pieces = s.split(/:/)
     String ref = pieces[0].replaceFirst('\\[','')
     return ref.replaceFirst('\\]','')
   }
 
+
+
+  String extractCiteLinkedText(String s) {
+    String stripped = s.replaceFirst("\\{",'')
+    stripped = stripped.replaceFirst("\\}.+",'')
+    return stripped
+  }
+  String extractCiteLinkedRef(String s) {
+    String stripped = s.replaceFirst("[^\\}]+\\}\\[",'')
+    stripped = stripped.replaceFirst("\\]",'')
+    return stripped
+  }
+
+  /** Builds a map of reference identifiers
+   * by recursively examining the document tree
+   * from its root. Reference identifiers 
+   * are mapped to a pair of values giving the URL 
+   * and (possibly null) title of the reference.
+   */
   void collectReferences() {
     collectReferences(root)
   }
 
+  /** Builds a map of reference identifiers
+   * by recursively examining document tree
+   * from node n.
+   * The identifiers are mapped to a pair of
+   * values giving the URL and (possibly null)
+   * title of the reference.
+   * @param n Node to examine.
+   */
   void collectReferences(Object n) {
     String classShort =  n.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
     if (classShort == "ReferenceNode") {
@@ -175,11 +220,26 @@ class MarkdownUtil {
   }
 
 
-
+  /** Converts the citedown content parsed in
+   * root to generic markdown with URN values
+   * resolved to URLs.
+   * @returns A string of generic markdown.
+   */
   String toMarkdown() {
-    return toMarkdown(root, "", "")
+    return toMarkdown(root, "", "") + "\n\n"
   }
 
+
+  /** Converts the citedown content in a Node
+   * to generic markdown with URN values
+   * resolved to URLs.
+   * @param n The node to convert.
+   * @param accumulated Accumulator storing
+   * recursively gathered markdown.
+   * @param contextNote A string recording the short
+   * name of the current block context.
+   * @returns A string of generic markdown.
+   */
   String toMarkdown(Object n, String accumulated, String contextNote) {
 
     String txt = ""
@@ -189,7 +249,9 @@ class MarkdownUtil {
     String shortName = n.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
 
 
-    if (debug) { System.err.println "SHORTNAME: " + shortName} 
+    if (debug) {
+      System.err.println "At ${shortName}, accum: || "  + accumulated + "||"
+    }
 
 
     if (blockNodes.contains(shortName)) {
@@ -202,7 +264,24 @@ class MarkdownUtil {
 	txt = txt + lastPair[0]
       }
       if (blockTrail.size() > 0) {
-	txt = "${txt}${blockTrail}\n\n"
+	txt = "${txt}${blockTrail}"
+      }
+
+      if (accumulated.size() > 0) {
+	if (debug) { System.err.println "Add newlines before " + shortName	
+	}
+
+	switch (shortName) {
+	case "OrderedListNode":
+	case "BulletListNode":
+	txt = txt + "\n"
+	break
+
+	default:
+	txt = txt + "\n\n"
+	break
+	}
+
       }
     }
 
@@ -212,6 +291,7 @@ class MarkdownUtil {
     // TextNode is the one class where we emit
     // the text content of the Node.
     txt = n.getText()
+    System.err.println "TEXT NODE : ||"  + citedown.substring(startIdx,endIdx) + "||"
 
     // Also need to check for stuff to append when
     // TextNode is following inline markup:
@@ -270,7 +350,6 @@ class MarkdownUtil {
 
 
 
-
     ////////////////////////////////////////////
     /// LISTS
 
@@ -291,28 +370,44 @@ class MarkdownUtil {
     break
     ////////////////////////////////////////////
 
+    ////////////////////////////////////////////
+    /// CITATION
+
+    case "edu.harvard.chs.citedown.ast.ReferenceNode":
+    // mirror without trailing \n:
+    txt = citedown.substring(startIdx, endIdx)
+    break
+
+
+    case "edu.harvard.chs.citedown.ast.CiteRefLinkNode":
+    String literalStr = citedown.substring(startIdx, endIdx)
+    txt = "[${extractCiteLinkedText(literalStr)}][${extractCiteLinkedRef(literalStr)}]"
+
+    break
+    ////////////////////////////////////////////
 
 
 
-
-
+    break
     // Ignore these block classes:
-    case "edu.harvard.chs.citedown.ast.BulletListNode":
     case "edu.harvard.chs.citedown.ast.ParaNode":
+    case "edu.harvard.chs.citedown.ast.BulletListNode":
     case "edu.harvard.chs.citedown.ast.RootNode":
     case "edu.harvard.chs.citedown.ast.SuperNode":
     break
 
     // Identify unhandled Nodes classes
     default:
-    System.err.println "n is " + n.getClass() + ":   " + n
+    System.err.println "UNHANDLED CLASS " + n.getClass() + ":   " + n
     break
     }
     accumulated += txt
-
-
-    n.getChildren().each { c ->
-      accumulated =  toMarkdown(c, accumulated, contextNote)
+    System.err.println "For ${shortName}, accum now: || "  + accumulated + "||"
+    if (terminalNodes.contains(shortName)) {
+    } else {
+      n.getChildren().each { c ->
+	accumulated =  toMarkdown(c, accumulated, contextNote)
+      }
     }
     return accumulated.toString()
   }

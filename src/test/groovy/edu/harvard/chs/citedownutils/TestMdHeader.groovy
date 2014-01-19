@@ -18,7 +18,6 @@ class TestMdHeader {
     assert lines[2] == "Text paragraph 1."
   }
 
-
   @Test void testMixedContent() {
     MarkdownUtil mdu = new MarkdownUtil(mixedContent)
     assert mdu

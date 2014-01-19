@@ -60,7 +60,7 @@ class MarkdownUtil {
   /** List of block type nodes that are mutually
    * exclusive in markdown.
 . */
-  ArrayList blockNodes = ["ParaNode", "HeaderNode", "BulletListNode", "OrderedListNode"]
+  ArrayList blockNodes = ["ParaNode", "HeaderNode", "BulletListNode", "OrderedListNode","ReferenceNode"]
 
   /** List of node types that will be mirrored without
    * recursive processing
@@ -172,8 +172,9 @@ class MarkdownUtil {
   void collectReferences(Object n) {
     String classShort =  n.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
     if (classShort == "ReferenceNode") {
-      String txt = citedown.substring(n.getStartIndex(), n.getEndIndex())
+
       def pair = [n.getUrl(), n.getTitle()]
+      String txt = citedown.substring(n.getStartIndex(), n.getEndIndex())
       referenceMap[extractRef(txt)] = pair
       
     } else {
@@ -226,6 +227,8 @@ class MarkdownUtil {
    * @returns A string of generic markdown.
    */
   String toMarkdown() {
+    referenceMap.clear()
+    collectReferences()
     return toMarkdown(root, "", "") + "\n\n"
   }
 
@@ -250,7 +253,7 @@ class MarkdownUtil {
 
 
     if (debug > 0) {
-      System.err.println "At ${shortName}, accum: || "  + accumulated + "||"
+      System.err.println "At ${shortName}, accum: ||"  + accumulated + "||"
     }
 
 
@@ -265,16 +268,28 @@ class MarkdownUtil {
       }
       if (blockTrail.size() > 0) {
 	txt = "${txt}${blockTrail}"
+	blockTrail = ""
       }
 
       if (accumulated.size() > 0) {
-	if (debug > 0) { System.err.println "Add newlines before " + shortName	
-	}
 
 	switch (shortName) {
+
+	case "ReferenceNode":
+	if (n.getUrl() ==~ /urn.+/) {
+	  // entire node will be omitted since URN will be resolved in place
+	  // at citation.
+	} else {
+	  // use default block behavior for URLs
+	  txt = txt + "\n\n"
+	}
+	break
+
 	case "OrderedListNode":
 	case "BulletListNode":
-	txt = txt + "\n"
+	if (txt.size() > 0) {
+	  txt = txt + "\n"
+	}
 	break
 
 	default:
@@ -290,8 +305,7 @@ class MarkdownUtil {
     case "edu.harvard.chs.citedown.ast.TextNode":
     // TextNode is the one class where we emit
     // the text content of the Node.
-    txt = n.getText()
-    System.err.println "TEXT NODE : ||"  + citedown.substring(startIdx,endIdx) + "||"
+    txt = txt + n.getText()
 
     // Also need to check for stuff to append when
     // TextNode is following inline markup:
@@ -374,16 +388,32 @@ class MarkdownUtil {
     /// CITATION
 
     case "edu.harvard.chs.citedown.ast.ReferenceNode":
-    // mirror without trailing \n:
-    txt = citedown.substring(startIdx, endIdx)
+    if (n.getUrl() ==~ /urn.+/) {
+      // omit since URN will be resolved in place
+      // at citation.
+
+    } else {
+      // mirror without trailing \n:
+      txt = txt + citedown.substring(startIdx, endIdx).replaceAll(/\n/,"")
+    }
     break
 
 
     case "edu.harvard.chs.citedown.ast.CiteRefLinkNode":
     String literalStr = citedown.substring(startIdx, endIdx)
-    txt = "[${extractCiteLinkedText(literalStr)}][${extractCiteLinkedRef(literalStr)}]"
+    String url = ""
 
+    String refId = extractCiteLinkedRef(literalStr)
+    referenceMap.keySet().each { k ->
+      if (k == refId) {
+	def record = referenceMap[k]
+	String urn = record[0]
+	url = urlForCitedUrn(urn)
+      }
+    }
+    txt = "[${extractCiteLinkedText(literalStr)}](${url})"
     break
+
     ////////////////////////////////////////////
 
 
@@ -402,7 +432,7 @@ class MarkdownUtil {
     break
     }
     accumulated += txt
-    System.err.println "For ${shortName}, accum now: || "  + accumulated + "||"
+    if (debug > 0) { System.err.println "For ${shortName}, accum now: ||"  + accumulated + "||" }
     if (terminalNodes.contains(shortName)) {
     } else {
       n.getChildren().each { c ->

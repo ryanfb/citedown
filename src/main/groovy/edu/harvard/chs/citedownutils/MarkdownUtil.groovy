@@ -56,7 +56,7 @@ class MarkdownUtil {
 
   ArrayList terminalNodes = ["TextNode"]
   
-  ArrayList blockNodes = ["ParaNode", "HeaderNode", "RootNode"]
+  ArrayList blockNodes = ["ParaNode", "HeaderNode", "RootNode", "BulletListNode"]
 
   ArrayList inlineNodes = ["EmphNode", "StrongNode"]
 
@@ -180,6 +180,8 @@ class MarkdownUtil {
 
     String shortName = n.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
     if (blockNodes.contains(shortName)) {
+      // record context
+      contextNote = shortName
       // pop off inlineStack and add blockTrail
       // as needed
       while (inlineStack.size() > 0) {
@@ -193,75 +195,67 @@ class MarkdownUtil {
 
     switch (n.getClass().name) {
 
-      //    case "edu.harvard.chs.citedown.ast.BulletListNode":
-      //    System.err.println "BULL LIST: " + citedown.substring(starthere,endhere)
-      //contextNote = "BULLLIST"
-      //break
-
     case "edu.harvard.chs.citedown.ast.TextNode":
-    //    if (trail.size() != 0) {
-    //txt = "${trail}${n.getText()}"
-    //trail = ""
-    //} else {
     txt = n.getText()
-    //}
 
+    // check for stuff to append:
+    if (inlineStack.size() > 0) {
+      boolean done = false
+      while (!done) {
+	def lastPair = inlineStack.pop()
+	if (lastPair[1] == endIdx) {
+	  txt = txt + lastPair[0]
+	} else {
+	  inlineStack.push(lastPair)
+	  done = true
+	}
+	if (inlineStack.size() == 0) {
+	  done = true
+	}
+      }
+    }
     break
 
     case "edu.harvard.chs.citedown.ast.EmphNode":
     txt = "*"
-    def pair = ["*", endIdx]
+    def pair = ["*", endIdx - 1]
     inlineStack.push(pair)
-    System.err.println "inlineStack now " + inlineStack
-    //trail = "*" + trail 
     break
 
 
     case "edu.harvard.chs.citedown.ast.StrongNode":
     txt = "**"
-    //trail = "**" + trail 
+    def pair = ["**", endIdx - 2]
+    inlineStack.push(pair)
     break
 
-
-    //case "edu.harvard.chs.citedown.ast.ListItemNode":
-    //if (contextNote == "BULLLIST") {
-    //   txt = "-"
-    //}
-    //contextNote = ""
-    //System.err.println "LIST ITEM: " + citedown.substring(starthere,endhere)
-    //break
-
-
-    //case "edu.harvard.chs.citedown.ast.SuperNode":
-    //txt = "${citedown.substring(starthere,endhere).replaceAll(/\t/,'')}" + "\n"
-    //contextNote = ""
-    //break
-
-
-    case "edu.harvard.chs.citedown.ast.ParaNode":
+    case "edu.harvard.chs.citedown.ast.ListItemNode":
+    System.err.println "Context is " + contextNote
+    if (contextNote == "BulletListNode") {
+       txt = "\n- "
+    }
     break
 
     case "edu.harvard.chs.citedown.ast.HeaderNode":
-    //txt = "${citedown.substring(starthere,endhere).replaceAll(/\t/,'')}\n"
     Integer level = n.getLevel()
     Integer count = 1
     while (count <= level) {
       txt = txt + "#"
       count++;
     }
-    contextNote = "HEADER"
     blockTrail = txt
     break
     
 
-
-    // Ignore these classes:
+    // Ignore these block classes:
+    case "edu.harvard.chs.citedown.ast.BulletListNode":
+    case "edu.harvard.chs.citedown.ast.ParaNode":
     case "edu.harvard.chs.citedown.ast.RootNode":
     case "edu.harvard.chs.citedown.ast.SuperNode":
     break
 
     default:
-    System.err.println "n is " + n.getClass()
+    System.err.println "n is " + n.getClass() + ":   " + n
     break
     }
     accumulated += txt

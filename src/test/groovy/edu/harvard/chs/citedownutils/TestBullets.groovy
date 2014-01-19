@@ -13,7 +13,8 @@ class TestBullets {
 
     String converted = mdu.toMarkdown()
     def lines = converted.readLines()
-    assert lines[1] == "-item 1"
+    System.err.println "Lines:  " + lines
+    assert lines[1] == "- item 1"
 
   }
   

@@ -35,7 +35,7 @@ RefLinkNode
 √ RootNode	 
 SimpleNode	 
 SpecialTextNode	 
-StrongNode	 
+√ StrongNode	 
 SuperNode	 
 TableBodyNode	 
 TableCaptionNode	 
@@ -58,6 +58,7 @@ class MarkdownUtil {
   
   ArrayList blockNodes = ["ParaNode", "HeaderNode", "RootNode"]
 
+  ArrayList inlineNodes = ["EmphNode", "StrongNode"]
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -82,8 +83,9 @@ class MarkdownUtil {
   java.util.LinkedHashMap referenceMap = [:]
 
 
+  def inlineStack = []
 
-  String trail = ""
+  String blockTrail = ""
 
   /** Empty constructor */
   MarkdownUtil() {
@@ -173,14 +175,19 @@ class MarkdownUtil {
   String toMarkdown(Object n, String accumulated, String contextNote) {
 
     String txt = ""
-    Integer starthere = n.getStartIndex()
-    Integer endhere = n.getEndIndex()
+    Integer startIdx = n.getStartIndex()
+    Integer endIdx = n.getEndIndex()
 
     String shortName = n.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
-    System.err.println "Check " + shortName + " in " + blockNodes
     if (blockNodes.contains(shortName)) {
-      if (trail.size() > 0) {
-	txt = "${trail}\n\n"
+      // pop off inlineStack and add blockTrail
+      // as needed
+      while (inlineStack.size() > 0) {
+	def lastPair = inlineStack.pop()
+	txt = txt + lastPair[0]
+      }
+      if (blockTrail.size() > 0) {
+	txt = "${txt}${blockTrail}\n\n"
       }
     }
 
@@ -192,13 +199,29 @@ class MarkdownUtil {
       //break
 
     case "edu.harvard.chs.citedown.ast.TextNode":
+    //    if (trail.size() != 0) {
+    //txt = "${trail}${n.getText()}"
+    //trail = ""
+    //} else {
     txt = n.getText()
+    //}
+
     break
 
     case "edu.harvard.chs.citedown.ast.EmphNode":
     txt = "*"
-    trail = "*" + trail 
+    def pair = ["*", endIdx]
+    inlineStack.push(pair)
+    System.err.println "inlineStack now " + inlineStack
+    //trail = "*" + trail 
     break
+
+
+    case "edu.harvard.chs.citedown.ast.StrongNode":
+    txt = "**"
+    //trail = "**" + trail 
+    break
+
 
     //case "edu.harvard.chs.citedown.ast.ListItemNode":
     //if (contextNote == "BULLLIST") {
@@ -227,9 +250,16 @@ class MarkdownUtil {
       count++;
     }
     contextNote = "HEADER"
-    trail = txt
+    blockTrail = txt
     break
     
+
+
+    // Ignore these classes:
+    case "edu.harvard.chs.citedown.ast.RootNode":
+    case "edu.harvard.chs.citedown.ast.SuperNode":
+    break
+
     default:
     System.err.println "n is " + n.getClass()
     break

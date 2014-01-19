@@ -12,7 +12,7 @@ AbbreviationNode
 AbstractNode	 
 AutoLinkNode	 
 BlockQuoteNode	 
-BulletListNode	 
+√ BulletListNode	 
 CiteRefLinkNode	 
 CodeNode	 
 DefinitionListNode	 
@@ -23,10 +23,10 @@ ExpImageNode
 ExpLinkNode	 
 √ HeaderNode	 
 HtmlBlockNode	 
-InlineHtmlNode	 
-ListItemNode	 
+InlineHtmlNode  
+√ ListItemNode	 
 MailLinkNode	 
-OrderedListNode	 
+√ OrderedListNode	 
 √ ParaNode	 
 QuotedNode	 
 ReferenceNode	 
@@ -36,7 +36,7 @@ RefLinkNode
 SimpleNode	 
 SpecialTextNode	 
 √ StrongNode	 
-SuperNode	 
+√ SuperNode	 
 TableBodyNode	 
 TableCaptionNode	 
 TableCellNode	 
@@ -54,11 +54,17 @@ WikiLinkNode
  */
 class MarkdownUtil {
 
-  ArrayList terminalNodes = ["TextNode"]
-  
-  ArrayList blockNodes = ["ParaNode", "HeaderNode", "RootNode", "BulletListNode"]
+  // tmp var to remove ....
+  def debug
 
-  ArrayList inlineNodes = ["EmphNode", "StrongNode"]
+
+  //ArrayList terminalNodes = ["TextNode"]
+  //ArrayList inlineNodes = ["EmphNode", "StrongNode"]
+
+  // In markdown, these node types are exclusive.
+  ArrayList blockNodes = ["ParaNode", "HeaderNode", "RootNode", "BulletListNode", "OrderedListNode"]
+
+  
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -86,6 +92,8 @@ class MarkdownUtil {
   def inlineStack = []
 
   String blockTrail = ""
+
+  Integer olIdx
 
   /** Empty constructor */
   MarkdownUtil() {
@@ -179,11 +187,16 @@ class MarkdownUtil {
     Integer endIdx = n.getEndIndex()
 
     String shortName = n.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
+
+
+    if (debug) { System.err.println "SHORTNAME: " + shortName} 
+
+
     if (blockNodes.contains(shortName)) {
       // record context
       contextNote = shortName
-      // pop off inlineStack and add blockTrail
-      // as needed
+      // pop off entire inlineStack and 
+      // append any closing markup for block
       while (inlineStack.size() > 0) {
 	def lastPair = inlineStack.pop()
 	txt = txt + lastPair[0]
@@ -196,9 +209,12 @@ class MarkdownUtil {
     switch (n.getClass().name) {
 
     case "edu.harvard.chs.citedown.ast.TextNode":
+    // TextNode is the one class where we emit
+    // the text content of the Node.
     txt = n.getText()
 
-    // check for stuff to append:
+    // Also need to check for stuff to append when
+    // TextNode is following inline markup:
     if (inlineStack.size() > 0) {
       boolean done = false
       while (!done) {
@@ -216,6 +232,9 @@ class MarkdownUtil {
     }
     break
 
+
+    ////////////////////////////////////////////
+    /// SIMPLE INLINE ELEMENTS 
     case "edu.harvard.chs.citedown.ast.EmphNode":
     txt = "*"
     def pair = ["*", endIdx - 1]
@@ -229,12 +248,12 @@ class MarkdownUtil {
     inlineStack.push(pair)
     break
 
-    case "edu.harvard.chs.citedown.ast.ListItemNode":
-    System.err.println "Context is " + contextNote
-    if (contextNote == "BulletListNode") {
-       txt = "\n- "
-    }
-    break
+    ////////////////////////////////////////////
+
+
+
+    ////////////////////////////////////////////
+    /// SPECIAL BLOCK ELEMENTS 
 
     case "edu.harvard.chs.citedown.ast.HeaderNode":
     Integer level = n.getLevel()
@@ -245,7 +264,37 @@ class MarkdownUtil {
     }
     blockTrail = txt
     break
+
+    ////////////////////////////////////////////
+
+
+
+
+
+    ////////////////////////////////////////////
+    /// LISTS
+
+    case "edu.harvard.chs.citedown.ast.ListItemNode":
+    if (contextNote == "BulletListNode") {
+       txt = "\n- "
+    } else if (contextNote == "OrderedListNode") {
+      if (olIdx < startIdx) {
+	txt = "\n" + citedown.substring(olIdx, startIdx)
+      }
+      olIdx = endIdx
+    }
+    break
+
     
+    case "edu.harvard.chs.citedown.ast.OrderedListNode":
+    olIdx = startIdx
+    break
+    ////////////////////////////////////////////
+
+
+
+
+
 
     // Ignore these block classes:
     case "edu.harvard.chs.citedown.ast.BulletListNode":
@@ -254,6 +303,7 @@ class MarkdownUtil {
     case "edu.harvard.chs.citedown.ast.SuperNode":
     break
 
+    // Identify unhandled Nodes classes
     default:
     System.err.println "n is " + n.getClass() + ":   " + n
     break

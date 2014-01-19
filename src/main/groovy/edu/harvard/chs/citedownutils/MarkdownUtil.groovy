@@ -55,7 +55,7 @@ WikiLinkNode
 class MarkdownUtil {
 
   // tmp var to remove ....
-  def debug 
+  Integer debug  = 0
 
   /** List of block type nodes that are mutually
    * exclusive in markdown.
@@ -249,7 +249,7 @@ class MarkdownUtil {
     String shortName = n.getClass().name.replaceFirst("edu.harvard.chs.citedown.ast.","")
 
 
-    if (debug) {
+    if (debug > 0) {
       System.err.println "At ${shortName}, accum: || "  + accumulated + "||"
     }
 
@@ -268,7 +268,7 @@ class MarkdownUtil {
       }
 
       if (accumulated.size() > 0) {
-	if (debug) { System.err.println "Add newlines before " + shortName	
+	if (debug > 0) { System.err.println "Add newlines before " + shortName	
 	}
 
 	switch (shortName) {

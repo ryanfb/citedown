@@ -64,7 +64,7 @@ WikiLinkNode: (WILL NOT BE SUPPORTED IN citedown)
 class MarkdownUtil {
 
   // tmp var to remove in production release ....
-  Integer debug  = 1
+  Integer debug  = 0
 
   /** List of block type nodes that are mutually
    * exclusive in markdown.

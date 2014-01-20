@@ -54,8 +54,8 @@ WikiLinkNode
  */
 class MarkdownUtil {
 
-  // tmp var to remove ....
-  Integer debug  = 1
+  // tmp var to remove in production release ....
+  Integer debug  = 0
 
   /** List of block type nodes that are mutually
    * exclusive in markdown.
@@ -178,8 +178,12 @@ class MarkdownUtil {
       referenceMap[extractRef(txt)] = pair
       
     } else {
-      n.getChildren().each { c ->
-	collectReferences(c)
+      if (n == null) {
+	System.err.println "MarkdownUtil: reached a null Node while collecting references! (${classShort})"
+      } else {
+	n.getChildren().each { c ->
+	  collectReferences(c)
+	}
       }
     }
   }
@@ -225,8 +229,13 @@ class MarkdownUtil {
    * root to generic markdown with URN values
    * resolved to URLs.
    * @returns A string of generic markdown.
+   * @throws Exception if root is null.
    */
-  String toMarkdown() {
+  String toMarkdown() 
+  throws Exception {
+    if (root == null) {
+      throw new Exception("MarkdownUtil, toMarkdown():  no parsed document root defined!")
+    }
     referenceMap.clear()
     collectReferences()
     return toMarkdown(root, "", "") + "\n\n"

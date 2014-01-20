@@ -55,7 +55,7 @@ WikiLinkNode
 class MarkdownUtil {
 
   // tmp var to remove ....
-  Integer debug  = 0
+  Integer debug  = 1
 
   /** List of block type nodes that are mutually
    * exclusive in markdown.
@@ -287,9 +287,7 @@ class MarkdownUtil {
 
 	case "OrderedListNode":
 	case "BulletListNode":
-	if (txt.size() > 0) {
 	  txt = txt + "\n"
-	}
 	break
 
 	default:

@@ -13,10 +13,10 @@ class TestBullets {
     assert mdu
 
     String converted = mdu.toMarkdown()
+    System.err.println converted
     def lines = converted.readLines()
     assert lines[2] == "- item 1"
   }
-
 
   @Test void testMixed() {
     MarkdownUtil mdu = new MarkdownUtil(mixedText)
@@ -27,5 +27,4 @@ class TestBullets {
     System.err.println "Lines:  " + lines
     assert lines[2] == "- *item* 1"
   }  
-
 }

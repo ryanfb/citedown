@@ -7,6 +7,14 @@ import org.parboiled.support.ParsingResult
 
 import edu.harvard.chs.cite.CiteUrn
 import edu.harvard.chs.cite.CtsUrn
+
+
+
+
+/* The following list names all Node types implemented in pegdown.
+ * Checked items in the list have been implemented and tested in
+ * citedown-to-markdown conversion.
+ */
 /*
 AbbreviationNode	 
 AbstractNode	 
@@ -46,7 +54,7 @@ TableNode
 TableRowNode	 
 √ TextNode	 
 VerbatimNode	 
-WikiLinkNode
+WikiLinkNode: (WILL NOT BE SUPPORTED IN citedown)
 */
 
 /** Utilities for working with citedown source and converting
@@ -73,7 +81,6 @@ class MarkdownUtil {
   /** Source text in citedown format. */
   String citedown
 
-
   /** Base URL value for CTS request. */
   String cts
 
@@ -92,10 +99,8 @@ class MarkdownUtil {
   /** Stack of suffixes for inline markdown.*/
   def inlineStack = []
 
-
-  /** Suffix string for current block context. */
+  /** Suffix string (or one-level stack, if you prefer) for current block context. */
   String blockTrail = ""
-
 
   /** Index of substring for ordered lists within
    * parsed string. */
@@ -113,7 +118,6 @@ class MarkdownUtil {
     this.root = pdp.parser.parse(citedownSource.toCharArray())
   }
 
-
   /** Assigns an parses a String of citedown
    * content.
    * @param citedownSource The text source to parse.
@@ -123,7 +127,6 @@ class MarkdownUtil {
     PegDownProcessor pdp = new PegDownProcessor(Extensions.CITE)
     this.root = pdp.parser.parse(citedownSource.toCharArray())
   }
-
 
 
   /** Finds the reference identifier given in
@@ -139,12 +142,22 @@ class MarkdownUtil {
   }
 
 
-
+  /** Extracts linked text from a CITE reference link.
+   * @param s The citedown source.
+   * @returns The linked text contained within curly brackets
+   * in the original source.
+   */
   String extractCiteLinkedText(String s) {
     String stripped = s.replaceFirst("\\{",'')
     stripped = stripped.replaceFirst("\\}.+",'')
     return stripped
   }
+
+ /** Extracts bracketed reference ID from a CITE reference link.
+   * @param s The citedown source.
+   * @returns The linked text contained within squre brackets
+   * in the original source.
+   */
   String extractCiteLinkedRef(String s) {
     String stripped = s.replaceFirst("[^\\}]+\\}\\[",'')
     stripped = stripped.replaceFirst("\\]",'')
@@ -191,6 +204,42 @@ class MarkdownUtil {
 
   /** Resolves a CITE URN value to a URL.  If the URN value
    * is a CITE URN, the list of collections configured with the
+   * CITE Image Extension is checked. 
+   * @param urnStr String value of the URN to resolve.
+   * @returns A URL pointing to the minimum CITE retrieval method of
+   * the appropriate CITE service for the URN.
+   * @throws Exception if urnStr cannot be parsed as
+   * either a CTS URN or a CITE Collection URN.
+   */
+  String urlForQuotedUrn(String urnStr) 
+  throws Exception {
+    String reply = null
+    try {
+      CtsUrn urn = new CtsUrn(urnStr)
+      reply = "${cts}?request=GetPassage&urn=${urn}"
+    } catch (Exception ctse) {
+    }
+
+    try {
+      CiteUrn urn = new CiteUrn(urnStr)
+      String collectionUrn = "urn:cite:${urn.getNs()}:${urn.getCollection()}"
+      if (imgCollections.contains(collectionUrn) ) {
+	reply = "${img}?request=GetBinaryImage&urn=${urn}"
+      } else {
+	reply = "${coll}?request=GetObject&urn=${urn}"
+      }
+    } catch (Exception obje) {
+    }
+    if (reply == null) {
+      throw new Exception ("CitedownToMarkdown:  could not resolve URN ${urnStr} to a URL.")
+    } else {
+      return reply
+    }    
+  }
+
+
+  /** Resolves a CITE URN value to a URL.  If the URN value
+   * is a CITE URN, the list of collections configured with the
    * CITE Image Extension is checked.
    * @param urnStr String value of the URN to resolve.
    * @returns A URL pointing to the CITE *Plus method of
@@ -224,6 +273,76 @@ class MarkdownUtil {
     }
   }
 
+
+  /** Formats a quotation of a URN in citedown format
+   * as markdown.  For image URNs, this is a simple conversion
+   * of citedown to comparable markdown notation formatted like "![CAPTION]".  
+   * For text and collection objects, MarkdownUtil must submit a GetPassage()
+   * or GetObject() request to the configured service, and extract the appropriate
+   * section of the contents, so this method will fail if the server
+   * cannot be reached.
+   * @param src The citedown source.
+   * @returns A String with markdown resolution of the citation.
+   */
+  String mdForQuotedUrnContent(String src) {
+    
+    String reply = ""
+
+    String urn = ""
+    String refId = extractCiteLinkedRef(src)
+    referenceMap.keySet().each { k ->
+      if (k == refId) {
+	def record = referenceMap[k]
+	urn = record[0]
+      }
+    }
+      
+    try {
+      CtsUrn ctsUrn = new CtsUrn(urn)
+      String req = "${cts}?request=GetPassage&urn=${ctsUrn}"
+      reply = req
+      // submit, extract cts:passage element
+    } catch (Exception ctse) {
+    }
+
+    try {
+      CiteUrn citeUrn = new CiteUrn(urn)
+      String collectionUrn = "urn:cite:${citeUrn.getNs()}:${citeUrn.getCollection()}"
+      if (imgCollections.contains(collectionUrn) ) {
+	String imgUrl = urlForQuotedUrn(urn)
+	reply =  "![${extractCiteLinkedText(src)}](${imgUrl})"   
+
+      } else {
+
+	String req = "${coll}?request=GetObject&urn=${citeUrn}"
+	// submit and extract part of reply
+	reply = req
+      }
+    } catch (Exception obje) {
+      System.err.println "${urn} is not a cite urn."
+    }
+    
+    return  reply
+  }
+
+  /** Formats a citation of a URN in citedown format
+   * as markdown.
+   * @param src The citedown source.
+   * @returns A String with markdown resolution of the citation.
+   */
+  String mdForCitedUrnContent(String src) {
+      String url = ""
+
+      String refId = extractCiteLinkedRef(src)
+      referenceMap.keySet().each { k ->
+	if (k == refId) {
+	  def record = referenceMap[k]
+	  String urn = record[0]
+	  url = urlForCitedUrn(urn)
+	}
+      }
+      return "[${extractCiteLinkedText(src)}](${url})"
+  }
 
   /** Converts the citedown content parsed in
    * root to generic markdown with URN values
@@ -407,18 +526,13 @@ class MarkdownUtil {
 
 
     case "edu.harvard.chs.citedown.ast.CiteRefLinkNode":
+    // CHECK FOR BANG QUOTATION
     String literalStr = citedown.substring(startIdx, endIdx)
-    String url = ""
-
-    String refId = extractCiteLinkedRef(literalStr)
-    referenceMap.keySet().each { k ->
-      if (k == refId) {
-	def record = referenceMap[k]
-	String urn = record[0]
-	url = urlForCitedUrn(urn)
-      }
+    if (literalStr[0] == "!") {
+      txt = txt + mdForQuotedUrnContent(literalStr)
+    } else {
+      txt = txt + mdForCitedUrnContent(literalStr)
     }
-    txt = "[${extractCiteLinkedText(literalStr)}](${url})"
     break
 
     ////////////////////////////////////////////

@@ -3,7 +3,8 @@ ext {
 
     pegdownVersion = "1.0.1"
     citeVersion = "0.14.1"
-
+    greekutilsVersion = "0.8.6"
     junitversion = "4.10"	
     xmlunitversion = "1.3"
+
 }

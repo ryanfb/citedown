@@ -17,7 +17,15 @@ dependencies {
   compile group: 'org.pegdown', name : 'pegdown', version: pegdownVersion
   compile group: 'org.codehaus.groovy', name: 'groovy-all', version: groovyVersion
   compile group: 'edu.harvard.chs', name: 'cite', version: citeVersion	
+  compile  group: 'edu.harvard.chs', name : 'greekutils' , version: greekutilsVersion
 
   testCompile group: 'junit', name: 'junit', version: junitversion
   testCompile group :'xmlunit', name: 'xmlunit', version: xmlunitversion
 }
+
+
+// Builds massive fat jar with all dependencies included: 
+jar {
+   from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+

@@ -7,7 +7,7 @@ import org.parboiled.support.ParsingResult
 
 import edu.harvard.chs.cite.CiteUrn
 import edu.harvard.chs.cite.CtsUrn
-
+import edu.harvard.chs.f1k.GreekNode
 
 
 
@@ -57,13 +57,14 @@ VerbatimNode
 WikiLinkNode: (WILL NOT BE SUPPORTED IN citedown)
 */
 
+
 /** Utilities for working with citedown source and converting
  * to vanilla markdown with all URN references resolved to URLs.
  */
 class MarkdownUtil {
 
   // tmp var to remove in production release ....
-  Integer debug  = 0
+  Integer debug  = 1
 
   /** List of block type nodes that are mutually
    * exclusive in markdown.
@@ -105,6 +106,14 @@ class MarkdownUtil {
   /** Index of substring for ordered lists within
    * parsed string. */
   Integer olIdx
+
+  /** Namespace for CTS XML */
+  groovy.xml.Namespace ctsXmlNs = new groovy.xml.Namespace("http://chs.harvard.edu/xmlns/cts")
+
+  /** Namespace for CITE XML */
+  groovy.xml.Namespace citeXmlNs = new groovy.xml.Namespace("http://chs.harvard.edu/xmlns/cite")
+
+  boolean simpleTextInQuotation = true
 
   /** Empty constructor */
   MarkdownUtil() {
@@ -274,6 +283,90 @@ class MarkdownUtil {
   }
 
 
+
+  String quoteObject(String urnStr) {
+    String quotation = "\n\n"
+    URL citeUrl = new URL("${coll}?request=GetObject&urn=${urnStr}")
+    if (debug > 1) {System.err.println "Made query url " + citeUrl}
+    String reply = citeUrl.getText("UTF-8")
+    if (debug > 1) {System.err.println "Got object reply " + reply}
+    def docRoot    
+    try {
+      docRoot = new XmlParser().parseText(reply)
+      if (debug > 1) { System.err.println "IT PARSED!" }
+    } catch (Exception e) {
+      System.err.println "Quoted text reply failed to parse."
+    }
+
+
+    docRoot[citeXmlNs.reply][citeXmlNs.citeObject].each { obj ->
+      // create a labelling row:
+      Integer propCount = 0
+      quotation +=  "| "
+      obj[citeXmlNs.citeProperty].each { prop ->
+	quotation += prop.'@label' + " |"
+	propCount++
+      }
+      quotation += "\n|"
+      while (propCount > 0) {
+	quotation += " ---- |"
+	propCount--
+      }
+      quotation += "\n|"
+      // then get data values:
+      obj[citeXmlNs.citeProperty].each { prop ->
+	quotation += prop.text() + " |"
+	propCount++
+      }
+      quotation += "\n\n"
+    }
+    return quotation
+  }
+
+  String quoteText(String urnStr) {
+    String quotation = "\n\n"
+    URL ctsUrl = new URL("${cts}?request=GetPassage&urn=${urnStr}")
+    if (debug > 1) {
+      System.err.println "Quote ${urnStr} with this: "
+      System.err.println ctsUrl
+    }
+    String reply = ctsUrl.getText("UTF-8")
+    if (debug > 1) { System.err.println reply}
+    def docRoot    
+    try {
+      docRoot = new XmlParser().parseText(reply)
+      if (debug > 1) { System.err.println "IT PARSED!" }
+    } catch (Exception e) {
+      System.err.println "Quoted text reply failed to parse."
+    }
+
+    // use a greek node to convert to xml...?
+    docRoot[ctsXmlNs.reply][ctsXmlNs.passage].each { psg ->
+      if (debug > 1) {System.err.println psg}
+      GreekNode gn = new GreekNode(psg)
+      if (debug > 1) {System.err.println "NOW USE GREEK NODE: " + gn}
+
+      String replyText
+      if (simpleTextInQuotation) {
+	replyText = gn.collectText()
+      } else {
+      
+
+	try {
+	  replyText = gn.toXml(true)
+	} catch (Exception e) {
+	  System.err.println "FAILED TO CONVERT GN TO XML: " + e
+	}
+      }
+      replyText.readLines().each { ln ->
+	quotation = quotation + "> " + ln + "\n"
+      }
+    }
+    
+    return quotation + "\n"
+  }
+
+
   /** Formats a quotation of a URN in citedown format
    * as markdown.  For image URNs, this is a simple conversion
    * of citedown to comparable markdown notation formatted like "![CAPTION]".  
@@ -299,10 +392,12 @@ class MarkdownUtil {
       
     try {
       CtsUrn ctsUrn = new CtsUrn(urn)
-      String req = "${cts}?request=GetPassage&urn=${ctsUrn}"
-      reply = req
-      // submit, extract cts:passage element
+      reply = quoteText(urn)
+      if (debug > 1) { System.err.println "QUOTED TEXT for ${urn} = "  + reply }
+
+
     } catch (Exception ctse) {
+      if (debug > 1) { System.err.println urn + " is not a cts URN"}
     }
 
     try {
@@ -313,13 +408,11 @@ class MarkdownUtil {
 	reply =  "![${extractCiteLinkedText(src)}](${imgUrl})"   
 
       } else {
-
-	String req = "${coll}?request=GetObject&urn=${citeUrn}"
-	// submit and extract part of reply
-	reply = req
+	if (debug > 1) {System.err.println "QUOTE CITE OBJ ${urn}"}
+	reply = quoteObject(urn)
       }
     } catch (Exception obje) {
-      System.err.println "${urn} is not a cite urn."
+      if (debug > 1) { System.err.println "${urn} is not a cite urn."}
     }
     
     return  reply
@@ -395,6 +488,9 @@ class MarkdownUtil {
 	txt = txt + lastPair[0]
       }
       if (blockTrail.size() > 0) {
+	if (debug > 0) {
+	  System.err.println "txt ||${txt}||, and trail ${blockTrail}"
+	}
 	txt = "${txt}${blockTrail}"
 	blockTrail = ""
       }
@@ -478,11 +574,13 @@ class MarkdownUtil {
     case "edu.harvard.chs.citedown.ast.HeaderNode":
     Integer level = n.getLevel()
     Integer count = 1
+    String trail = ""
     while (count <= level) {
       txt = txt + "#"
+      trail = trail + "#"
       count++;
     }
-    blockTrail = txt
+    blockTrail = trail
     break
 
     ////////////////////////////////////////////

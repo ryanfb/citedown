@@ -288,19 +288,22 @@ class MarkdownUtil {
   }
 
 
-
+  /** Issues a GetObject request to the configured CITE Collection service,
+   * formats the reply's CITE Collection object as a table
+   * (multimarkdown extension to markdown) with property names as column 
+   * headings.
+   * @param urnStr CITE Collection URN value of the object to quote.
+   * @returns A string with a mutimarkdown table.
+   */
   String quoteObject(String urnStr) {
     String quotation = "\n\n"
     URL citeUrl = new URL("${coll}?request=GetObject&urn=${urnStr}")
-    if (debug > 1) {System.err.println "Made query url " + citeUrl}
     String reply = citeUrl.getText("UTF-8")
-    if (debug > 1) {System.err.println "Got object reply " + reply}
     def docRoot    
     try {
       docRoot = new XmlParser().parseText(reply)
-      if (debug > 1) { System.err.println "IT PARSED!" }
     } catch (Exception e) {
-      System.err.println "Quoted text reply failed to parse."
+      System.err.println "MarkdowUtil, quoteObject: Quoted object reply to ${citeUrl} failed to parse.  ${e}"
     }
 
 
@@ -328,39 +331,38 @@ class MarkdownUtil {
     return quotation
   }
 
+
+  /** Formats a passage of text identified by URN as a markdown
+   * blockquote.  Issues a GetPassage request to the configured CTS,
+   * then uses the value of the boolean simpleTextInQuotation
+   * to decide whether to quote the full XML of the GetPassage reply
+   * (false) or just the content of the XML's text nodes (true).
+   * @param urnStr CTS URN value identifying the passage to quote.
+   * @returns A markdown blockquoted String.
+   */
   String quoteText(String urnStr) {
     String quotation = "\n\n"
     URL ctsUrl = new URL("${cts}?request=GetPassage&urn=${urnStr}")
-    if (debug > 1) {
-      System.err.println "Quote ${urnStr} with this: "
-      System.err.println ctsUrl
-    }
     String reply = ctsUrl.getText("UTF-8")
-    if (debug > 1) { System.err.println reply}
     def docRoot    
     try {
       docRoot = new XmlParser().parseText(reply)
-      if (debug > 1) { System.err.println "IT PARSED!" }
     } catch (Exception e) {
-      System.err.println "Quoted text reply failed to parse."
+      System.err.println "MarkdownUtil, quoteText:  Quoted text reply to ${ctsUrl} failed to parse.  ${e}"
     }
 
-    // use a greek node to convert to xml...?
     docRoot[ctsXmlNs.reply][ctsXmlNs.passage].each { psg ->
-      if (debug > 1) {System.err.println psg}
-      GreekNode gn = new GreekNode(psg)
-      if (debug > 1) {System.err.println "NOW USE GREEK NODE: " + gn}
-
       String replyText
+      GreekNode gn = new GreekNode(psg)
+
       if (simpleTextInQuotation) {
 	replyText = gn.collectText()
-      } else {
-      
 
+      } else {
 	try {
 	  replyText = gn.toXml(true)
 	} catch (Exception e) {
-	  System.err.println "FAILED TO CONVERT GN TO XML: " + e
+	  System.err.println "MarkdownUtil, quoteText:  could not convert GreekNode to XML: " + e
 	}
       }
       replyText.readLines().each { ln ->
@@ -398,11 +400,9 @@ class MarkdownUtil {
     try {
       CtsUrn ctsUrn = new CtsUrn(urn)
       reply = quoteText(urn)
-      if (debug > 1) { System.err.println "QUOTED TEXT for ${urn} = "  + reply }
-
 
     } catch (Exception ctse) {
-      if (debug > 1) { System.err.println urn + " is not a cts URN"}
+      if (debug > 1) { System.err.println "MarkdownUtil, mdForQuotedUrnContent: " +  urn + " is not a cts URN"}
     }
 
     try {
@@ -413,11 +413,10 @@ class MarkdownUtil {
 	reply =  "![${extractCiteLinkedText(src)}](${imgUrl})"   
 
       } else {
-	if (debug > 1) {System.err.println "QUOTE CITE OBJ ${urn}"}
 	reply = quoteObject(urn)
       }
     } catch (Exception obje) {
-      if (debug > 1) { System.err.println "${urn} is not a cite urn."}
+      if (debug > 1) { System.err.println "MarkdownUtil, mdForQuotedUrnContent: ${urn} is not a cite urn."}
     }
     
     return  reply
@@ -493,9 +492,6 @@ class MarkdownUtil {
 	txt = txt + lastPair[0]
       }
       if (blockTrail.size() > 0) {
-	if (debug > 0) {
-	  System.err.println "txt ||${txt}||, and trail ${blockTrail}"
-	}
 	txt = "${txt}${blockTrail}"
 	blockTrail = ""
       }

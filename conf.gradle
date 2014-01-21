@@ -1,0 +1,6 @@
+ext {
+    cts = ""
+    coll = ""
+    img = ""
+    imgCollections = ""
+}

@@ -22,7 +22,7 @@ AutoLinkNode
 BlockQuoteNode	 
 √ BulletListNode	 
 √ CiteRefLinkNode	 
-CodeNode	 
+√ CodeNode	 
 DefinitionListNode	 
 DefinitionNode	 
 DefinitionTermNode	 
@@ -74,7 +74,7 @@ class MarkdownUtil {
   /** List of node types that will be mirrored without
    * recursive processing
    */
-  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode"]
+  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode", "CodeNode"]
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -556,6 +556,11 @@ class MarkdownUtil {
     txt = "*"
     def pair = ["*", endIdx - 1]
     inlineStack.push(pair)
+    break
+
+
+    case "edu.harvard.chs.citedown.ast.CodeNode":
+    txt = citedown.substring(startIdx, endIdx)
     break
 
 

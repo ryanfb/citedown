@@ -53,7 +53,7 @@ TableHeaderNode
 TableNode	 
 TableRowNode	 
 √ TextNode	 
-VerbatimNode	 
+√ VerbatimNode	 
 WikiLinkNode: (WILL NOT BE SUPPORTED IN citedown)
 */
 
@@ -69,12 +69,12 @@ class MarkdownUtil {
   /** List of block type nodes that are mutually
    * exclusive in markdown.
 . */
-  ArrayList blockNodes = ["ParaNode", "HeaderNode", "BulletListNode", "OrderedListNode","ReferenceNode"]
+  ArrayList blockNodes = ["ParaNode", "HeaderNode", "BulletListNode", "OrderedListNode","ReferenceNode", "VerbatimNode"]
 
   /** List of node types that will be mirrored without
    * recursive processing
    */
-  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode", "CodeNode"]
+  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode"]
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -558,12 +558,6 @@ class MarkdownUtil {
     inlineStack.push(pair)
     break
 
-
-    case "edu.harvard.chs.citedown.ast.CodeNode":
-    txt = citedown.substring(startIdx, endIdx)
-    break
-
-
     case "edu.harvard.chs.citedown.ast.StrongNode":
     txt = "**"
     def pair = ["**", endIdx - 2]
@@ -592,6 +586,15 @@ class MarkdownUtil {
     ////////////////////////////////////////////
 
 
+    ////////////////////////////////////////////
+    //// LITERALLY QUOTED ELEMENTS
+
+    case "edu.harvard.chs.citedown.ast.VerbatimNode":
+    case "edu.harvard.chs.citedown.ast.CodeNode":
+    txt = txt + citedown.substring(startIdx, endIdx)
+    break
+
+    ////////////////////////////////////////////
 
 
     ////////////////////////////////////////////

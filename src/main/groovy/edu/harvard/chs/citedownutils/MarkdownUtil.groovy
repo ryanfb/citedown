@@ -42,7 +42,7 @@ RefImageNode
 RefLinkNode	 
 √ RootNode	 
 SimpleNode	 
-SpecialTextNode	 
+√ SpecialTextNode	 
 √ StrongNode	 
 √ SuperNode	 
 TableBodyNode	 
@@ -54,7 +54,11 @@ TableNode
 TableRowNode	 
 √ TextNode	 
 √ VerbatimNode	 
-WikiLinkNode: (WILL NOT BE SUPPORTED IN citedown)
+*/
+
+/*
+CLASSES THAT WILL NOTE BE SUPPORTED IN citedown:
+√ WikiLinkNode
 */
 
 
@@ -591,6 +595,7 @@ class MarkdownUtil {
 
     case "edu.harvard.chs.citedown.ast.VerbatimNode":
     case "edu.harvard.chs.citedown.ast.CodeNode":
+    case "edu.harvard.chs.citedown.ast.SpecialTextNode":
     txt = txt + citedown.substring(startIdx, endIdx)
     break
 

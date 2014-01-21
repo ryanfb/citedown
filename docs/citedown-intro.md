@@ -33,3 +33,7 @@ These lines look like !{this}[img] in the Venetus A manuscript.
 
 They occur on folio 12 recto, !{here}[obj]
 
+
+## More information about citedown ##
+
+See the file citedown-more.md in this directory for further details about citedown, and the file citedown-intro-converted.md to see what this document looks like with all citedown notation converted to markdown.

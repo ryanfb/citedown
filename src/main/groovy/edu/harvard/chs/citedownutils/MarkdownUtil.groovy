@@ -113,6 +113,11 @@ class MarkdownUtil {
   /** Namespace for CITE XML */
   groovy.xml.Namespace citeXmlNs = new groovy.xml.Namespace("http://chs.harvard.edu/xmlns/cite")
 
+
+  /** True if quoted URNs should embed only text content of XML returned
+   * from a CTS GetPassage request. False implies that the well-formed XML
+   * of the <passage> element will be embedded.
+   */
   boolean simpleTextInQuotation = true
 
   /** Empty constructor */

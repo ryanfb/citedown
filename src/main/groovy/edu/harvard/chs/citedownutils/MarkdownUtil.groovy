@@ -18,7 +18,7 @@ import edu.harvard.chs.f1k.GreekNode
 /*
 AbbreviationNode	 
 AbstractNode	 
-AutoLinkNode	 
+√ AutoLinkNode	 
 BlockQuoteNode	 -- see github issue
 √ BulletListNode	 
 √ CiteRefLinkNode	 
@@ -36,7 +36,7 @@ InlineHtmlNode
 √ MailLinkNode	 
 √ OrderedListNode	 
 √ ParaNode	 
-QuotedNode       -- text w/in quotation marks?
+QuotedNode       -- text w/in quotation marks? Obviated by passing along special chars literally to MD?
 √ ReferenceNode	 
 √ RefImageNode	 
 √ RefLinkNode
@@ -78,7 +78,7 @@ class MarkdownUtil {
   /** List of node types that will be mirrored without
    * recursive processing
    */
-  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode", "RefLinkNode","ExpLinkNode", "RefImageNode","ExpImageNode", "MailLinkNode"]
+  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode", "RefLinkNode","ExpLinkNode", "RefImageNode","ExpImageNode", "MailLinkNode","AutoLinkNode"]
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -602,7 +602,7 @@ class MarkdownUtil {
     ////////////////////////////////////////////
     //// LITERALLY QUOTED ELEMENTS
 
-
+    case "edu.harvard.chs.citedown.ast.AutoLinkNode":
     case "edu.harvard.chs.citedown.ast.MailLinkNode":
     case "edu.harvard.chs.citedown.ast.ExpLinkNode":
     case "edu.harvard.chs.citedown.ast.RefLinkNode":

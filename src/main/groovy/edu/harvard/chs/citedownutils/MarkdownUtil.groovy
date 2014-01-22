@@ -19,7 +19,7 @@ import edu.harvard.chs.f1k.GreekNode
 AbbreviationNode	 
 AbstractNode	 
 AutoLinkNode	 
-BlockQuoteNode	 
+BlockQuoteNode	 -- see github issue
 √ BulletListNode	 
 √ CiteRefLinkNode	 
 √ CodeNode	 
@@ -27,8 +27,8 @@ DefinitionListNode
 DefinitionNode	 
 DefinitionTermNode	 
 √ EmphNode	 
-ExpImageNode	 
-ExpLinkNode	 
+ExpImageNode	  -- "explicit"? In line link to display image
+ExpLinkNode	  -- "explicit"? In line link
 √ HeaderNode	 
 HtmlBlockNode	 
 InlineHtmlNode  
@@ -36,10 +36,10 @@ InlineHtmlNode
 MailLinkNode	 
 √ OrderedListNode	 
 √ ParaNode	 
-QuotedNode	 
+QuotedNode       -- text w/in quotation marks?
 √ ReferenceNode	 
 RefImageNode	 
-RefLinkNode	 
+RefLinkNode	 -- should allow embedded inline markdown
 √ RootNode	 
 SimpleNode	 
 √ SpecialTextNode	 
@@ -78,7 +78,7 @@ class MarkdownUtil {
   /** List of node types that will be mirrored without
    * recursive processing
    */
-  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode"]
+  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode", "RefLinkNode","ExpLinkNode"]
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -147,7 +147,15 @@ class MarkdownUtil {
   }
 
 
-  /** Finds the reference identifier given in
+
+  String extractRefFromLinkNode(String s) {
+    def pieces = s.split(/:/)
+    String ref = pieces[0].replaceFirst('.+\\[','')
+    return ref.replaceLast('\\]','')
+  }
+
+
+  /** Finds the first string given in
    * square brackets in the text of a ReferenceNode.
    * @param s The full string of a citedown ReferenceNode.
    * @returns The reference identifier identified
@@ -556,6 +564,7 @@ class MarkdownUtil {
 
     ////////////////////////////////////////////
     /// SIMPLE INLINE ELEMENTS 
+
     case "edu.harvard.chs.citedown.ast.EmphNode":
     txt = "*"
     def pair = ["*", endIdx - 1]
@@ -593,6 +602,9 @@ class MarkdownUtil {
     ////////////////////////////////////////////
     //// LITERALLY QUOTED ELEMENTS
 
+
+    case "edu.harvard.chs.citedown.ast.ExpLinkNode":
+    case "edu.harvard.chs.citedown.ast.RefLinkNode":
     case "edu.harvard.chs.citedown.ast.VerbatimNode":
     case "edu.harvard.chs.citedown.ast.CodeNode":
     case "edu.harvard.chs.citedown.ast.SpecialTextNode":

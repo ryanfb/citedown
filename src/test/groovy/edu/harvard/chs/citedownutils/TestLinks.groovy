@@ -14,6 +14,7 @@ class TestLinks {
 
   String links = '#Heading#\n\nLink using [reference notation][1] in this paragraph\n\nDirect [link](http://www.homermultitext.org) here\n\n[1]:  http://shot.holycross.edu/ "A web page"\n\n'
 
+  String embedded = '#Heading#\n\nLink using [reference *with emphasis* notation embedded][1] in this paragraph\n\nDirect [link *including* emphasis](http://www.homermultitext.org) here\n\n[1]:  http://shot.holycross.edu/ "A web page"\n\n'
 
   @Test void testLinks() {
     MarkdownUtil mdu = new MarkdownUtil(links)
@@ -26,6 +27,21 @@ class TestLinks {
 
     String expectedExpLink = "Direct [link](http://www.homermultitext.org) here"
     assert lines[4] == expectedExpLink
+
+  }
+
+  @Test void testEmbeddedMarkdown() {
+    MarkdownUtil mdu = new MarkdownUtil(embedded)
+    assert mdu
+    String converted = mdu.toMarkdown()
+    def lines = converted.readLines()
+
+   String expectedRefLink = "Link using [reference *with emphasis* notation embedded][1] in this paragraph"
+    assert lines[2] == expectedRefLink
+
+    String expectedExpLink = "Direct [link *including* emphasis](http://www.homermultitext.org) here"
+    assert lines[4] == expectedExpLink
+
 
   }
 

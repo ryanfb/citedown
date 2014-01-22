@@ -27,8 +27,8 @@ DefinitionListNode
 DefinitionNode	 
 DefinitionTermNode	 
 √ EmphNode	 
-ExpImageNode	  -- "explicit"? In line link to display image
-ExpLinkNode	  -- "explicit"? In line link
+√ ExpImageNode
+√ ExpLinkNode
 √ HeaderNode	 
 HtmlBlockNode	 
 InlineHtmlNode  
@@ -38,8 +38,8 @@ MailLinkNode
 √ ParaNode	 
 QuotedNode       -- text w/in quotation marks?
 √ ReferenceNode	 
-RefImageNode	 
-RefLinkNode	 -- should allow embedded inline markdown
+√ RefImageNode	 
+√ RefLinkNode
 √ RootNode	 
 SimpleNode	 
 √ SpecialTextNode	 
@@ -78,7 +78,7 @@ class MarkdownUtil {
   /** List of node types that will be mirrored without
    * recursive processing
    */
-  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode", "RefLinkNode","ExpLinkNode"]
+  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode", "RefLinkNode","ExpLinkNode", "RefImageNode","ExpImageNode"]
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -605,6 +605,8 @@ class MarkdownUtil {
 
     case "edu.harvard.chs.citedown.ast.ExpLinkNode":
     case "edu.harvard.chs.citedown.ast.RefLinkNode":
+    case "edu.harvard.chs.citedown.ast.ExpImageNode":
+    case "edu.harvard.chs.citedown.ast.RefImageNode":
     case "edu.harvard.chs.citedown.ast.VerbatimNode":
     case "edu.harvard.chs.citedown.ast.CodeNode":
     case "edu.harvard.chs.citedown.ast.SpecialTextNode":

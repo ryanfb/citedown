@@ -18,31 +18,31 @@ import edu.harvard.chs.f1k.GreekNode
 /*
 AbbreviationNode	 
 AbstractNode	 
-AutoLinkNode	 
-BlockQuoteNode	 
+√ AutoLinkNode	 
+BlockQuoteNode	 -- see github issue
 √ BulletListNode	 
 √ CiteRefLinkNode	 
-CodeNode	 
+√ CodeNode	 
 DefinitionListNode	 
 DefinitionNode	 
 DefinitionTermNode	 
 √ EmphNode	 
-ExpImageNode	 
-ExpLinkNode	 
+√ ExpImageNode
+√ ExpLinkNode
 √ HeaderNode	 
 HtmlBlockNode	 
 InlineHtmlNode  
 √ ListItemNode	 
-MailLinkNode	 
+√ MailLinkNode	 
 √ OrderedListNode	 
 √ ParaNode	 
-QuotedNode	 
+QuotedNode       -- text w/in quotation marks? Obviated by passing along special chars literally to MD?
 √ ReferenceNode	 
-RefImageNode	 
-RefLinkNode	 
+√ RefImageNode	 
+√ RefLinkNode
 √ RootNode	 
 SimpleNode	 
-SpecialTextNode	 
+√ SpecialTextNode	 
 √ StrongNode	 
 √ SuperNode	 
 TableBodyNode	 
@@ -53,8 +53,12 @@ TableHeaderNode
 TableNode	 
 TableRowNode	 
 √ TextNode	 
-VerbatimNode	 
-WikiLinkNode: (WILL NOT BE SUPPORTED IN citedown)
+√ VerbatimNode	 
+*/
+
+/*
+CLASSES THAT WILL NOTE BE SUPPORTED IN citedown:
+√ WikiLinkNode
 */
 
 
@@ -69,12 +73,12 @@ class MarkdownUtil {
   /** List of block type nodes that are mutually
    * exclusive in markdown.
 . */
-  ArrayList blockNodes = ["ParaNode", "HeaderNode", "BulletListNode", "OrderedListNode","ReferenceNode"]
+  ArrayList blockNodes = ["ParaNode", "HeaderNode", "BulletListNode", "OrderedListNode","ReferenceNode", "VerbatimNode"]
 
   /** List of node types that will be mirrored without
    * recursive processing
    */
-  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode"]
+  ArrayList terminalNodes = ["ReferenceNode", "CiteRefLinkNode", "RefLinkNode","ExpLinkNode", "RefImageNode","ExpImageNode", "MailLinkNode","AutoLinkNode"]
 
   /** Root node of pegdown parsing result. */
   RootNode root
@@ -143,7 +147,15 @@ class MarkdownUtil {
   }
 
 
-  /** Finds the reference identifier given in
+
+  String extractRefFromLinkNode(String s) {
+    def pieces = s.split(/:/)
+    String ref = pieces[0].replaceFirst('.+\\[','')
+    return ref.replaceLast('\\]','')
+  }
+
+
+  /** Finds the first string given in
    * square brackets in the text of a ReferenceNode.
    * @param s The full string of a citedown ReferenceNode.
    * @returns The reference identifier identified
@@ -552,12 +564,12 @@ class MarkdownUtil {
 
     ////////////////////////////////////////////
     /// SIMPLE INLINE ELEMENTS 
+
     case "edu.harvard.chs.citedown.ast.EmphNode":
     txt = "*"
     def pair = ["*", endIdx - 1]
     inlineStack.push(pair)
     break
-
 
     case "edu.harvard.chs.citedown.ast.StrongNode":
     txt = "**"
@@ -587,6 +599,22 @@ class MarkdownUtil {
     ////////////////////////////////////////////
 
 
+    ////////////////////////////////////////////
+    //// LITERALLY QUOTED ELEMENTS
+
+    case "edu.harvard.chs.citedown.ast.AutoLinkNode":
+    case "edu.harvard.chs.citedown.ast.MailLinkNode":
+    case "edu.harvard.chs.citedown.ast.ExpLinkNode":
+    case "edu.harvard.chs.citedown.ast.RefLinkNode":
+    case "edu.harvard.chs.citedown.ast.ExpImageNode":
+    case "edu.harvard.chs.citedown.ast.RefImageNode":
+    case "edu.harvard.chs.citedown.ast.VerbatimNode":
+    case "edu.harvard.chs.citedown.ast.CodeNode":
+    case "edu.harvard.chs.citedown.ast.SpecialTextNode":
+    txt = txt + citedown.substring(startIdx, endIdx)
+    break
+
+    ////////////////////////////////////////////
 
 
     ////////////////////////////////////////////

@@ -8,6 +8,7 @@ class TestInline {
   String emph = "#Heading with *emphasis*#\n\nText paragraph 1.\n\n\n"
   String strong = "#Heading with *emphasis*#\n\n**Text** paragraph 1.\n\n\n"
 
+
   @Test void testEmph() {
     MarkdownUtil mdu = new MarkdownUtil(emph)
     assert mdu

@@ -1,9 +1,13 @@
 apply plugin: "groovy"
+apply plugin: "maven"
 
-apply from: "versions.gradle"
 
+
+
+group = "edu.harvard.chs"
 version = "1.2.1.0.1.0"
 
+apply from: "versions.gradle"
 
 if (hasProperty('pub')) {
     System.err.print "Using configuration data from ${pub}"
@@ -53,3 +57,11 @@ jar {
    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
+
+uploadArchives {
+    repositories.mavenDeployer {
+        repository(url: nexusRepo) {                   
+            authentication (userName: nexusUser, password: nexusPassword)
+        }
+    }
+}

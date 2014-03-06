@@ -12,6 +12,7 @@ class CiteSpec extends AbstractPegDownSpec {
       		test("CiteMarkdown/Inline_References")
       		test("CiteMarkdown/AthPol")
       		test("CiteMarkdown/Image_References")
+      		test("CiteMarkdown/Footnotes")
   		}
   	}
 }

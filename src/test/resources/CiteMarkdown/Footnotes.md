@@ -1,6 +1,6 @@
 References:[^first]
 
-[^first]:  This is the first note.
+[^first]: This is the first note.
 
 {CTS Text Example}[ctstext]
 {CITE Collection Object Example}[citeobject]
